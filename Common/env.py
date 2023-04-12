@@ -7,10 +7,11 @@ from gymnasium import spaces
 class SuperMario(gym.Env):
     metadata = {"render_fps": 96}
 
-    def __init__(self, size=5):
+    def __init__(self, size=5, render_fps=96):
         self.size = size  # The size of the square grid
         self.ratio = self.size*24/(5*6*60)
         self.window_size = 508  # The size of the PyGame window
+        self.metadata["render_fps"] = render_fps
 
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
