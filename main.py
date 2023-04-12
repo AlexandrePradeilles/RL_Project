@@ -2,7 +2,7 @@ from comet_ml import Experiment
 from Common import Worker, Play, get_params, Logger
 from torch.multiprocessing import Process, Pipe
 import numpy as np
-from Brain import Brain
+from Agent import Brain
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT

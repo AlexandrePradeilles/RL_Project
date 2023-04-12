@@ -22,7 +22,7 @@ class SuperMario(gym.Env):
                     dtype=np.uint8
                 )
 
-        # We have 4 actions, corresponding to "right", "up", "left", "down"
+        # We have 6 actions, corresponding to "right", "up", "left", "nothing", "up+right", "up+left"
         self.action_space = spaces.Discrete(6)
 
         """
@@ -43,6 +43,8 @@ class SuperMario(gym.Env):
         """
         self.window = None
         self.clock = None
+
+        # Let's define all the elements of the Super Mario Bros level
 
         self.pre_obs = [np.array([self.size-1, self.size, -self.size, 0])]
 
@@ -127,6 +129,7 @@ class SuperMario(gym.Env):
         self.champi = pygame.image.load("./source/champi.png")
         self.champi = pygame.transform.scale(self.champi, (self.pix_square_size / 2, self.pix_square_size / 2))
 
+        # Initialize the Enemies
         self.monsters = [Monster(self.size-1.6, 7, self.obstacles), Monster(self.size-1.6, self.size+7, self.obstacles), Monster(self.size-1.6, 2*self.size+7, self.obstacles), Monster(self.size-1.6, 2*self.size+7.5, self.obstacles),
                          Monster(self.size-5.6, 4*self.size+5.5, self.obstacles), Monster(self.size-5.6, 4*self.size+6.5, self.obstacles),
                          Monster(self.size-1.6, 7.5+5*self.size, self.obstacles), Monster(self.size-1.6, 7+5*self.size, self.obstacles),

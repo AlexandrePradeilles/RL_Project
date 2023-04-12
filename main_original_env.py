@@ -1,20 +1,15 @@
-from comet_ml import Experiment
-from Common import Worker, Play, get_params, Logger, make_mario, stack_states
-from torch.multiprocessing import Process, Pipe
+from Common import Play, get_params, Logger, make_mario, stack_states
 import numpy as np
-from Brain import Brain
+from Agent.RND_agent import MarioRND
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from tqdm import tqdm
 
 
-def run_workers(worker, conn):
-    worker.step(conn)
-
-
 if __name__ == '__main__':
     config = get_params()
+    config["algo"] = "RND"
 
     test_env = gym_super_mario_bros.make(config["env_name"])
     test_env = JoypadSpace(test_env, SIMPLE_MOVEMENT)
@@ -24,13 +19,11 @@ if __name__ == '__main__':
     config.update({"batch_size": (config["rollout_length"] * config["n_workers"]) // config["n_mini_batch"]})
     config.update({"predictor_proportion": 32 / config["n_workers"]})
 
-    brain = Brain(**config)
+    agent = MarioRND(**config)
 
     if config["do_train"]:
 
-        # experiment = Experiment() # Add your https://www.comet.ml/site configs here.
-
-        logger = Logger(brain, experiment=None, **config)
+        logger = Logger(agent, experiment=None, **config)
 
         if not config["train_from_scratch"]:
             init_iteration, episode = logger.load_weights()
@@ -39,7 +32,6 @@ if __name__ == '__main__':
             init_iteration = 0
             episode = 0
 
-        workers = [Worker(i, **config) for i in range(config["n_workers"])]
         envs = [make_mario(config["env_name"], config["max_frames_per_episode"]) for i in range(config["n_workers"])]
 
         for env in envs:
@@ -48,14 +40,6 @@ if __name__ == '__main__':
             env.t = 0
             env.max_pos = 0
             env.episod_reward = 0
-
-        # parents = []
-        # for worker in workers:
-        #     parent_conn, child_conn = Pipe()
-        #     p = Process(target=run_workers, args=(worker, child_conn,))
-        #     p.daemon = True
-        #     parents.append(parent_conn)
-        #     p.start()
 
         if config["train_from_scratch"]:
             print("---Pre_normalization started.---")
@@ -86,15 +70,8 @@ if __name__ == '__main__':
                         env.episode_reward = 0
                         env.max_pos = 0
 
-                # for parent, a in zip(parents, actions[t]):
-                #     parent.send(a)
-
-                # for parent in parents:
-                #     feedback = parent.recv()
-                #     states.append(feedback["next_state"][-1, ...].reshape(1, 84, 84))
-
                 if len(states) % (config["n_workers"] * config["rollout_length"]) == 0:
-                    brain.state_rms.update(np.stack(states))
+                    agent.state_rms.update(np.stack(states))
                     states = []
             print("---Pre_normalization is done.---")
 
@@ -133,9 +110,7 @@ if __name__ == '__main__':
                     total_states[worker_id, t] = env.stacked_states
 
                 total_actions[:, t], total_int_values[:, t], total_ext_values[:, t], total_log_probs[:, t], \
-                total_action_probs[:, t] = brain.get_actions_and_values(total_states[:, t], batch=True)
-                # for env, a in zip(env, total_actions[:, t]):
-                #     parent.send(a)
+                total_action_probs[:, t] = agent.get_actions_and_values(total_states[:, t], batch=True)
 
                 infos = []
                 for worker_id, env in enumerate(envs):
@@ -167,16 +142,6 @@ if __name__ == '__main__':
                         env.episode_reward = 0
                         env.max_pos = 0
 
-
-                # infos = []
-                # for worker_id, parent in enumerate(parents):
-                #     feedback = parent.recv()
-                #     infos.append(feedback["info"])
-                #     total_ext_rewards[worker_id, t] = feedback["reward"]
-                #     total_dones[worker_id, t] = feedback["done"]
-                #     next_states[worker_id] = feedback["next_state"]
-                #     total_next_obs[worker_id, t] = feedback["next_state"][-1, ...]
-
                 episode_ext_reward += total_ext_rewards[0, t]
                 if total_dones[0, t]:
                     episode += 1
@@ -186,12 +151,12 @@ if __name__ == '__main__':
                     episode_ext_reward = 0
 
             total_next_obs = concatenate(total_next_obs)
-            total_int_rewards = brain.calculate_int_rewards(total_next_obs)
-            _, next_int_values, next_ext_values, *_ = brain.get_actions_and_values(next_states, batch=True)
+            total_int_rewards = agent.calculate_int_rewards(total_next_obs)
+            _, next_int_values, next_ext_values, *_ = agent.get_actions_and_values(next_states, batch=True)
 
-            total_int_rewards = brain.normalize_int_rewards(total_int_rewards)
+            total_int_rewards = agent.normalize_int_rewards(total_int_rewards)
 
-            training_logs = brain.train(states=concatenate(total_states),
+            training_logs = agent.train(states=concatenate(total_states),
                                         actions=concatenate(total_actions),
                                         int_rewards=total_int_rewards,
                                         ext_rewards=total_ext_rewards,
@@ -202,8 +167,8 @@ if __name__ == '__main__':
                                         next_int_values=next_int_values,
                                         next_ext_values=next_ext_values,
                                         total_next_obs=total_next_obs)
-            brain.schedule_lr()
-            brain.schedule_clip_range(iteration)
+            agent.schedule_lr()
+            agent.schedule_clip_range(iteration)
 
             logger.log_iteration(iteration,
                                  training_logs,
@@ -211,7 +176,7 @@ if __name__ == '__main__':
                                  total_action_probs[0].max(-1).mean())
 
     else:
-        logger = Logger(brain, experiment=None, **config)
+        logger = Logger(agent, experiment=None, **config)
         logger.load_weights()
-        play = Play(config["env_name"], brain)
+        play = Play(config["env_name"], agent)
         play.evaluate()

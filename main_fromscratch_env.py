@@ -1,14 +1,12 @@
 from Common import Play, get_params, Logger, make_handmade_mario, stack_states
 import numpy as np
-from Brain import Brain
-from nes_py.wrappers import JoypadSpace
-import gym_super_mario_bros
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+from Agent.RND_agent import MarioRND
 from tqdm import tqdm
 
 
 if __name__ == '__main__':
     config = get_params()
+    config["algo"] = "RND"
 
     test_env = make_handmade_mario(config["max_frames_per_episode"])
     config.update({"n_actions": test_env.action_space.n})
@@ -17,11 +15,11 @@ if __name__ == '__main__':
     config.update({"batch_size": (config["rollout_length"] * config["n_workers"]) // config["n_mini_batch"]})
     config.update({"predictor_proportion": 32 / config["n_workers"]})
 
-    brain = Brain(**config)
+    agent = MarioRND(**config)
 
     if config["do_train"]:
 
-        logger = Logger(brain, experiment=None, **config)
+        logger = Logger(agent, experiment=None, **config)
 
         if not config["train_from_scratch"]:
             init_iteration, episode = logger.load_weights()
@@ -67,7 +65,7 @@ if __name__ == '__main__':
                         env.max_pos = 0
 
                 if len(states) % (config["n_workers"] * config["rollout_length"]) == 0:
-                    brain.state_rms.update(np.stack(states))
+                    agent.state_rms.update(np.stack(states))
                     states = []
             print("---Pre_normalization is done.---")
 
@@ -106,7 +104,7 @@ if __name__ == '__main__':
                     total_states[worker_id, t] = env.stacked_states
 
                 total_actions[:, t], total_int_values[:, t], total_ext_values[:, t], total_log_probs[:, t], \
-                total_action_probs[:, t] = brain.get_actions_and_values(total_states[:, t], batch=True)
+                total_action_probs[:, t] = agent.get_actions_and_values(total_states[:, t], batch=True)
 
                 infos = []
                 for worker_id, env in enumerate(envs):
@@ -137,12 +135,12 @@ if __name__ == '__main__':
                     episode_ext_reward = 0
 
             total_next_obs = concatenate(total_next_obs)
-            total_int_rewards = brain.calculate_int_rewards(total_next_obs)
-            _, next_int_values, next_ext_values, *_ = brain.get_actions_and_values(next_states, batch=True)
+            total_int_rewards = agent.calculate_int_rewards(total_next_obs)
+            _, next_int_values, next_ext_values, *_ = agent.get_actions_and_values(next_states, batch=True)
 
-            total_int_rewards = brain.normalize_int_rewards(total_int_rewards)
+            total_int_rewards = agent.normalize_int_rewards(total_int_rewards)
 
-            training_logs = brain.train(states=concatenate(total_states),
+            training_logs = agent.train(states=concatenate(total_states),
                                         actions=concatenate(total_actions),
                                         int_rewards=total_int_rewards,
                                         ext_rewards=total_ext_rewards,
@@ -153,8 +151,8 @@ if __name__ == '__main__':
                                         next_int_values=next_int_values,
                                         next_ext_values=next_ext_values,
                                         total_next_obs=total_next_obs)
-            brain.schedule_lr()
-            brain.schedule_clip_range(iteration)
+            agent.schedule_lr()
+            agent.schedule_clip_range(iteration)
 
             logger.log_iteration(iteration,
                                  training_logs,
@@ -162,7 +160,7 @@ if __name__ == '__main__':
                                  total_action_probs[0].max(-1).mean())
 
     else:
-        logger = Logger(brain, experiment=None, **config)
+        logger = Logger(agent, experiment=None, **config)
         logger.load_weights()
-        play = Play(config["env_name"], brain)
+        play = Play(None, agent)
         play.evaluate()

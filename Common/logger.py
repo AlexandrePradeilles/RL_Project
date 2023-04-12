@@ -38,7 +38,8 @@ class Logger:
     def create_wights_folder(self):
         if not os.path.exists("Models"):
             os.mkdir("Models")
-        os.mkdir("Models/" + self.log_dir)
+        algo = self.config["algo"]
+        os.mkdir(f"Models/{algo}/" + self.log_dir)
 
     def on(self):
         self.start_time = time.time()
@@ -76,22 +77,6 @@ class Logger:
             writer.add_scalar("Running Entropy", self.running_training_logs["entropy"], iteration)
             writer.add_scalar("Running Intrinsic Explained variance", self.running_training_logs["int_ep"], iteration)
             writer.add_scalar("Running Extrinsic Explained variance", self.running_training_logs["grad_norm"], iteration)
-        # self.experiment.log_metric("Episode Ext Reward", self.episode_ext_reward, self.episode)
-        # self.experiment.log_metric("Running Episode Ext Reward", self.running_ext_reward, self.episode)
-        # self.experiment.log_metric("Position", self.x_pos, self.episode)
-        # self.experiment.log_metric("Running last 10 Ext Reward", self.running_last_10_ext_r, self.episode)
-        # self.experiment.log_metric("Running Action Probability", self.running_act_prob, iteration)
-        # self.experiment.log_metric("Running Intrinsic Reward", self.running_int_reward, iteration)
-        # self.experiment.log_metric("Running PG Loss", self.running_training_logs["pg_loss"], iteration)
-        # self.experiment.log_metric("Running Ext Value Loss", self.running_training_logs["ext_value_loss"], iteration)
-        # self.experiment.log_metric("Running Int Value Loss", self.running_training_logs["int_value_loss"], iteration)
-        # self.experiment.log_metric("Running RND Loss", self.running_training_logs["rnd_loss"], iteration)
-        # self.experiment.log_metric("Running Entropy", self.running_training_logs["entropy"], iteration)
-        # self.experiment.log_metric("Running Intrinsic Explained variance",
-        #                            self.running_training_logs["int_ep"], iteration)
-        # self.experiment.log_metric("Running Extrinsic Explained variance",
-        #                            self.running_training_logs["ext_ep"], iteration)
-        # self.experiment.log_metric("Running grad norm", self.running_training_logs["grad_norm"], iteration)
 
         self.off()
         if iteration % self.config["interval"] == 0:
@@ -113,6 +98,53 @@ class Logger:
                   )
         self.on()
 
+    def log_iteration_ddql(self, *args):
+        iteration, training_logs, action_prob, explo_rate = args
+
+        self.running_act_prob = self.exp_avg(self.running_act_prob, action_prob)
+        if iteration == 1:
+            for k, v in training_logs.items():
+                self.running_training_logs.update({k: v})
+        else:
+            for k, v in training_logs.items():
+                self.running_training_logs[k] = self.exp_avg(self.running_training_logs[k], v)
+
+        if iteration % self.config["interval"] == 0:
+            self.save_params_ddql(self.episode, iteration)
+
+        with SummaryWriter("Logs/" + self.log_dir) as writer:
+            writer.add_scalar("Episode Ext Reward", self.episode_ext_reward, self.episode)
+            writer.add_scalar("Running Episode Ext Reward", self.running_ext_reward, self.episode)
+            writer.add_scalar("Position", self.x_pos, self.episode)
+            writer.add_scalar("Running last 10 Ext Reward", self.running_last_10_ext_r, self.episode)
+            writer.add_scalar("Max Episode Ext Reward", self.max_episode_reward, self.episode)
+            writer.add_scalar("Running Action Probability", self.running_act_prob, iteration)
+            writer.add_scalar("Running Loss", self.running_training_logs["loss"], iteration)
+            writer.add_scalar("Running TD estimation", self.running_training_logs["td_estimation"], iteration)
+            writer.add_scalar("Running TD target", self.running_training_logs["td_target"], iteration)
+
+        self.off()
+        if iteration % self.config["interval"] == 0:
+            print("Iter: {}| "
+                  "EP: {}| "
+                  "Exp_rate: {:.3f}| "
+                  "EP_Reward: {}| "
+                  "EP_Running_Reward: {:.2f}| "
+                  "Position: {:.1f}| "
+                  "Iter_Duration: {:.3f}| "
+                  "Time: {} "
+                  .format(iteration,
+                          self.episode,
+                          explo_rate,
+                          self.episode_ext_reward,
+                          self.running_ext_reward,
+                          self.x_pos,
+                          self.duration,
+                          datetime.datetime.now().strftime("%H:%M:%S")
+                          )
+                  )
+        self.on()
+
     def log_episode(self, *args):
         self.episode, self.episode_ext_reward, x_pos, visited_stages = args
 
@@ -123,6 +155,20 @@ class Logger:
         self.last_10_ep_rewards.append(self.episode_ext_reward)
         if len(self.last_10_ep_rewards) == self.moving_avg_window:
             self.running_last_10_ext_r = np.convolve(self.last_10_ep_rewards, self.moving_weights, 'valid')
+
+    def save_params_ddql(self, episode, iteration):
+        torch.save({"model": self.brain.net.state_dict(),
+                    "optimizer": self.brain.optimizer.state_dict(),
+                    "iteration": iteration,
+                    "episode": episode,
+                    "running_ext_reward": self.running_ext_reward,
+                    "running_act_prob": self.running_act_prob,
+                    "running_training_logs": self.running_training_logs,
+                    "x_pos": self.x_pos,
+                    "exploration_rate": self.brain.exploration_rate,
+                    },
+                   "Models/DDQL/" + self.log_dir + "/params.pth")
+
 
     def save_params(self, episode, iteration):
         torch.save({"policy_state_dict": self.brain.policy.state_dict(),
@@ -143,10 +189,10 @@ class Logger:
                     "running_training_logs": self.running_training_logs,
                     "x_pos": self.x_pos,
                     },
-                   "Models/" + self.log_dir + "/params.pth")
+                   "Models/RND/" + self.log_dir + "/params.pth")
 
     def load_weights(self):
-        model_dir = glob.glob("Models/*")
+        model_dir = glob.glob("Models/RND/*")
         model_dir.sort()
         checkpoint = torch.load(model_dir[-1] + "/params.pth")
 
@@ -158,5 +204,19 @@ class Logger:
         self.running_training_logs = checkpoint["running_training_logs"]
         self.running_act_prob = checkpoint["running_act_prob"]
         self.running_int_reward = checkpoint["running_int_reward"]
+
+        return checkpoint["iteration"], self.episode
+
+    def load_weights_ddql(self):
+        model_dir = glob.glob("Models/DDQL/*")
+        model_dir.sort()
+        checkpoint = torch.load(model_dir[-1] + "/params.pth")
+        self.brain.load(checkpoint)
+        self.log_dir = model_dir[-1].split(os.sep)[-1]
+        self.running_ext_reward = checkpoint["running_ext_reward"]
+        self.x_pos = checkpoint["x_pos"]
+        self.episode = checkpoint["episode"]
+        self.running_training_logs = checkpoint["running_training_logs"]
+        self.running_act_prob = checkpoint["running_act_prob"]
 
         return checkpoint["iteration"], self.episode
