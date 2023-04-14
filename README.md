@@ -8,10 +8,9 @@ Implementation of the **Exploration by Random Network Distillation** on Montezum
 Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](https://github.com/alirezakazemipour/PPO-RND/tree/mario) for the code.
 
 ## Demo
-![](Results/finisher_handmade.gif)
-
-
-https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4
+RND on original environment | RND on our environment
+:-: | :-:
+<video src='https://user-images.githubusercontent.com/104620137/232102498-e57f99c2-acb2-4446-ace3-1b70c514d068.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video>
 
 
 ## Results
