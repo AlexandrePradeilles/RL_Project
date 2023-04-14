@@ -9,9 +9,7 @@ Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](ht
 
 ## Demo
 
-RNN Policy| CNN Policy| Super Mario Bros
-:-----------------------:|:-----------------------:|:-----------------------:
-![](demo/RNN_Policy.gif)| ![](demo/CNN_Policy.gif)| ![](demo/mario.gif) 
+Results/finisher_handmade.mp4
 
 ## Results
 RNN Policy| CNN Policy
