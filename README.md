@@ -9,7 +9,8 @@ Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](ht
 
 ## Demo
 
-Results/finisher_handmade.mp4
+
+https://user-images.githubusercontent.com/104620137/232093647-5ddacf6d-d044-4512-b0ab-6009f24cad00.mp4
 
 ## Results
 RNN Policy| CNN Policy
