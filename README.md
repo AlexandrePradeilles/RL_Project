@@ -8,8 +8,8 @@ Implementation of the **Exploration by Random Network Distillation** on Montezum
 Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](https://github.com/alirezakazemipour/PPO-RND/tree/mario) for the code.
 
 ## Demo
+<video src='https://user-images.githubusercontent.com/104620137/232093647-5ddacf6d-d044-4512-b0ab-6009f24cad00.mp4' width=180/>
 
-https://user-images.githubusercontent.com/104620137/232093647-5ddacf6d-d044-4512-b0ab-6009f24cad00.mp4
 
 ## Results
 RNN Policy| CNN Policy
