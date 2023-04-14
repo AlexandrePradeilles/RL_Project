@@ -10,7 +10,11 @@ Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](ht
 ## Demo
 RND on original environment | RND on our environment
 :-: | :-:
-<video src='https://user-images.githubusercontent.com/104620137/232107443-50c00d8d-c2d4-487b-b5c7-fec1b4a66ee8.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video>
+<video src='https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video>
+
+https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4
+
+
 
 ## Results
 RNN Policy| CNN Policy
