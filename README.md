@@ -92,6 +92,8 @@ RL_Project
 6. _Models_ includes the pre-trained weights that you can use to play or keep training by it, also every weight is saved in this directory.
 ## Dependencies
 - gym == 0.17.3
+- gym-super-mario-bros == 7.3.0
+- keyboard == 0.13.5
 - matplotlib == 3.3.2
 - numpy == 1.19.2
 - opencv_contrib_python == 4.4.0.44
