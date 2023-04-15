@@ -26,12 +26,10 @@ RND on our environment | DDQL on our environment
 
 ## Table of hyper-parameters
 
-> By using the max and skip frames of 4, max frames per episode should be 4500 so 4500 * 4 = 18000 as it has been mentioned in the paper.
-
 Parameters          | Value
 :-----------------------:|:-----------------------:
 total rollouts per environment  | 30000
-max frames per episode  | 4500
+max frames per episode  | 1500
 rollout length       	       | 128
 number of environments| 32
 number of epochs	   | 4
