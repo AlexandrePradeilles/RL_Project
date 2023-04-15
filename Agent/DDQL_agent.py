@@ -16,8 +16,8 @@ class MarioDDQL:
         self.batch_size = 32
         self.n_epochs = 8
 
-        self.exploration_rate = 1
-        self.exploration_rate_decay =  0.9999# 0.99999975
+        self.exploration_rate = 0.9
+        self.exploration_rate_decay =  0.995# 0.99999975
         self.exploration_rate_min = 0.05
         self.gamma = 0.9
 
@@ -37,7 +37,7 @@ class MarioDDQL:
         if checkpoint:
             self.load(checkpoint)
 
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.0025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
 
@@ -53,7 +53,7 @@ class MarioDDQL:
         # EXPLORE
         if np.random.rand() < self.exploration_rate:
             action_idx = np.random.randint(self.action_dim)
-            proba = log(1 / (self.action_dim+1))
+            proba = 1 / (self.action_dim+1)
         # EXPLOIT
         else:
             state = torch.FloatTensor(state).cuda() if self.use_cuda else torch.FloatTensor(state)
@@ -62,7 +62,7 @@ class MarioDDQL:
             proba_values = torch.nn.functional.softmax(action_values, dim=-1)
             dist = Categorical(proba_values)
             action_idx = dist.sample() #torch.argmax(action_values, axis=1).item()
-            proba = dist.log_prob(action_idx).detach().cpu().numpy()[0]
+            proba = proba_values.detach().cpu().numpy()[0, action_idx] #dist.log_prob(action_idx).detach().cpu().numpy()[0]
 
         # increment step
         self.curr_step += 1
@@ -128,19 +128,7 @@ class MarioDDQL:
         self.net.target.load_state_dict(self.net.online.state_dict())
 
 
-    def learn(self):
-        # if self.curr_step % self.sync_every == 0:
-        #     self.sync_Q_target()
-
-        # if self.curr_step % self.save_every == 0:
-        #     self.save()
-
-        # if self.curr_step < self.burnin:
-        #     return None, None
-
-        # if self.curr_step % self.learn_every != 0:
-        #     return None, None
-        
+    def learn(self):        
         losses = []
         td_estimations = []
         td_targets = []

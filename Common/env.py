@@ -13,8 +13,7 @@ class SuperMario(gym.Env):
         self.window_size = 508  # The size of the PyGame window
         self.metadata["render_fps"] = render_fps
 
-        # Observations are dictionaries with the agent's and the target's location.
-        # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
+        # Observations
         self.observation_space = spaces.Box(
                     low=0,
                     high=255,
@@ -143,6 +142,7 @@ class SuperMario(gym.Env):
     def _get_info(self):
         return {
             "distance": self.max_pos,
+            "last_pos": self.last_loc,
             "x_pos": self._agent_location[0],
             "stage": 1
         }
@@ -212,7 +212,7 @@ class SuperMario(gym.Env):
         # Choose the agent's location uniformly at random
         self._agent_location = np.array([0, self.size-2])
         self.max_pos = self._agent_location[0]
-        self.last_loc = self._agent_location[0]-0.1
+        self.last_loc = self._agent_location[0]
         self.update_position()
         self.terminated = False
         self.jump_count = 0
@@ -231,7 +231,6 @@ class SuperMario(gym.Env):
 
 
     def step(self, action):
-        # print(action)
         dvs = 10*0.04*self.ratio
         jump_state = self.can_jump()
         if action in [3, 5, 1]:
@@ -240,9 +239,9 @@ class SuperMario(gym.Env):
                 self.jump_count = 0
             dvs = dvs / 2
         if action in [0, 1] and (self.horiz_speed >= 0 or jump_state):
-            self.horiz_speed = 1*self.ratio #min(max(self.horiz_speed, 0) + 0.4*self.ratio, 1*self.ratio)
+            self.horiz_speed = 1*self.ratio
         if action in [2, 5] and (self.horiz_speed <= 0 or jump_state):
-            self.horiz_speed = -1*self.ratio #max(min(self.horiz_speed, 0) - 0.4*self.ratio, -1*self.ratio)
+            self.horiz_speed = -1*self.ratio
         if action == 4:
             self.horiz_speed = 0
 
@@ -287,6 +286,7 @@ class SuperMario(gym.Env):
         
         if info["flag_get"]:
             reward = 0.2
+            self.terminated = True
 
         return observation, reward, self.terminated, info
 
@@ -300,8 +300,6 @@ class SuperMario(gym.Env):
             )
         if self.clock is None:
             self.clock = pygame.time.Clock()
-        # canva = self.canvas.copy()
-        # canva.scroll(dx=int((-1 - self._agent_location[0])*self.window_size / 8 ))
         self.window.blit(self.canvas, self.canvas.get_rect())
         pygame.event.pump()
         pygame.display.update()

@@ -1,4 +1,4 @@
-from Common import Play, get_params, Logger, make_handmade_mario, stack_states
+from Common import PlayDDQL, get_params, Logger, make_handmade_mario, stack_states
 import numpy as np
 from Agent.DDQL_agent import MarioDDQL
 from tqdm import tqdm
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         logger = Logger(agent, experiment=None, **config)
 
         if not config["train_from_scratch"]:
-            init_iteration, episode = logger.load_weights()
+            init_iteration, episode = logger.load_weights_ddql()
 
         else:
             init_iteration = 0
@@ -67,33 +67,15 @@ if __name__ == '__main__':
 
         rollout_base_shape = config["n_workers"], config["rollout_length"]
 
-        init_states = np.zeros(rollout_base_shape + config["state_shape"], dtype=np.uint8)
-        init_actions = np.zeros(rollout_base_shape, dtype=np.uint8)
         init_action_probs = np.zeros(rollout_base_shape + (config["n_actions"],))
-        init_int_rewards = np.zeros(rollout_base_shape)
-        init_ext_rewards = np.zeros(rollout_base_shape)
         init_dones = np.zeros(rollout_base_shape, dtype=np.bool)
-        init_int_values = np.zeros(rollout_base_shape)
-        init_ext_values = np.zeros(rollout_base_shape)
-        init_log_probs = np.zeros(rollout_base_shape)
-        init_next_states = np.zeros((rollout_base_shape[0],) + config["state_shape"], dtype=np.uint8)
-        init_next_obs = np.zeros(rollout_base_shape + config["obs_shape"], dtype=np.uint8)
 
         logger.on()
         episode_ext_reward = 0
         concatenate = np.concatenate
         for iteration in tqdm(range(init_iteration + 1, config["total_rollouts_per_env"] + 1)):
-            total_states = init_states
-            total_actions = init_actions
             total_action_probs = init_action_probs
-            total_int_rewards = init_int_rewards
-            total_ext_rewards = init_ext_rewards
             total_dones = init_dones
-            total_int_values = init_int_values
-            total_ext_values = init_ext_values
-            total_log_probs = init_log_probs
-            next_states = init_next_states
-            total_next_obs = init_next_obs
 
             for t in range(config["rollout_length"]):
                 infos = []
@@ -101,11 +83,17 @@ if __name__ == '__main__':
                     state = env.stacked_states
                     action, proba = agent.step(state)
                     next_state, r, d, info = env.step(action)
+                    r = (info["x_pos"] - info["last_pos"])*10 - 0.1
                     if config["render"] and worker_id==0:
                         env.render()
                     env.t += 1
-                    if env.t % env.max_episode_steps == 0 or info["flag_get"]:
+                    if env.t % env.max_episode_steps == 0:
                         d = True
+                    if info["flag_get"]:
+                        d = True
+                        r = 15
+                    if d:
+                        r -= 5
                     env.episod_reward += r
                     env.stacked_states = stack_states(env.stacked_states, next_state, False)
                     agent.cache(state, env.stacked_states, action, r, d)
@@ -125,9 +113,11 @@ if __name__ == '__main__':
                     stage = infos[0]["stage"]
                     logger.log_episode(episode, episode_ext_reward, x_pos, stage)
 
+            if iteration % 20 == 0:
+                agent.sync_Q_target()
+
             training_logs = agent.learn()
             agent.schedule_exploration_rate()
-            # agent.schedule_clip_range(iteration)
 
             logger.log_iteration_ddql(iteration,
                                  training_logs,
@@ -135,7 +125,8 @@ if __name__ == '__main__':
                                  agent.exploration_rate)
 
     else:
+        agent.exploration_rate = 0
         logger = Logger(agent, experiment=None, **config)
         logger.load_weights_ddql()
-        play = Play(None, agent)
+        play = PlayDDQL(None, agent)
         play.evaluate()

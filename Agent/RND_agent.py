@@ -120,9 +120,6 @@ class MarioRND:
                 unclipped_int_v_loss = (int_value.squeeze() - int_return).pow(2)
                 int_value_loss = 0.5 * torch.max(clipped_int_v_loss, unclipped_int_v_loss).mean()
 
-                # int_value_loss = self.mse_loss(int_value.squeeze(-1), int_return)
-                # ext_value_loss = self.mse_loss(ext_value.squeeze(-1), ext_return)
-
                 critic_loss = 0.5 * (int_value_loss + ext_value_loss)
 
                 rnd_loss = self.calculate_rnd_loss(next_state)
@@ -136,7 +133,6 @@ class MarioRND:
                 rnd_losses.append(rnd_loss.item())
                 entropies.append(entropy.item())
                 grad_norms.append(grad_norm.item())
-                # https://github.com/openai/random-network-distillation/blob/f75c0f1efa473d5109d487062fd8ed49ddce6634/ppo_agent.py#L187
 
         iteration_log = dict(pg_loss=sum(pg_losses) / len(pg_losses),
                              ext_value_loss=sum(ext_v_losses) / len(ext_v_losses),
@@ -193,8 +189,6 @@ class MarioRND:
             return int_reward.detach().cpu().numpy().reshape((self.config["n_workers"], self.config["rollout_length"]))
 
     def normalize_int_rewards(self, intrinsic_rewards):
-        # OpenAI's usage of Forward filter is definitely wrong;
-        # Because: https://github.com/openai/random-network-distillation/issues/16#issuecomment-488387659
         gamma = self.config["int_gamma"]  # Make code faster.
         intrinsic_returns = [[] for _ in range(self.config["n_workers"])]
         for worker in range(self.config["n_workers"]):

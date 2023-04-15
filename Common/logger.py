@@ -9,10 +9,10 @@ from collections import deque
 
 
 class Logger:
-    def __init__(self, brain, **config):
+    def __init__(self, agent, **config):
         self.config = config
         # self.experiment = self.config["experiment"]
-        self.brain = brain
+        self.agent = agent
         self.log_dir = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.start_time = 0
         self.duration = 0
@@ -31,7 +31,6 @@ class Logger:
 
         if self.config["do_train"] and self.config["train_from_scratch"]:
             self.create_wights_folder()
-            # self.experiment.log_parameters(self.config)
 
         self.exp_avg = lambda x, y: 0.99 * x + 0.01 * y if y != 0 else y
 
@@ -157,30 +156,30 @@ class Logger:
             self.running_last_10_ext_r = np.convolve(self.last_10_ep_rewards, self.moving_weights, 'valid')
 
     def save_params_ddql(self, episode, iteration):
-        torch.save({"model": self.brain.net.state_dict(),
-                    "optimizer": self.brain.optimizer.state_dict(),
+        torch.save({"model": self.agent.net.state_dict(),
+                    "optimizer": self.agent.optimizer.state_dict(),
                     "iteration": iteration,
                     "episode": episode,
                     "running_ext_reward": self.running_ext_reward,
                     "running_act_prob": self.running_act_prob,
                     "running_training_logs": self.running_training_logs,
                     "x_pos": self.x_pos,
-                    "exploration_rate": self.brain.exploration_rate,
+                    "exploration_rate": self.agent.exploration_rate,
                     },
                    "Models/DDQL/" + self.log_dir + "/params.pth")
 
 
     def save_params(self, episode, iteration):
-        torch.save({"policy_state_dict": self.brain.policy.state_dict(),
-                    "predictor_model_state_dict": self.brain.predictor_model.state_dict(),
-                    "target_model_state_dict": self.brain.target_model.state_dict(),
-                    "optimizer_state_dict": self.brain.optimizer.state_dict(),
-                    "state_rms_mean": self.brain.state_rms.mean,
-                    "state_rms_var": self.brain.state_rms.var,
-                    "state_rms_count": self.brain.state_rms.count,
-                    "int_reward_rms_mean": self.brain.int_reward_rms.mean,
-                    "int_reward_rms_var": self.brain.int_reward_rms.var,
-                    "int_reward_rms_count": self.brain.int_reward_rms.count,
+        torch.save({"policy_state_dict": self.agent.policy.state_dict(),
+                    "predictor_model_state_dict": self.agent.predictor_model.state_dict(),
+                    "target_model_state_dict": self.agent.target_model.state_dict(),
+                    "optimizer_state_dict": self.agent.optimizer.state_dict(),
+                    "state_rms_mean": self.agent.state_rms.mean,
+                    "state_rms_var": self.agent.state_rms.var,
+                    "state_rms_count": self.agent.state_rms.count,
+                    "int_reward_rms_mean": self.agent.int_reward_rms.mean,
+                    "int_reward_rms_var": self.agent.int_reward_rms.var,
+                    "int_reward_rms_count": self.agent.int_reward_rms.count,
                     "iteration": iteration,
                     "episode": episode,
                     "running_ext_reward": self.running_ext_reward,
@@ -196,7 +195,7 @@ class Logger:
         model_dir.sort()
         checkpoint = torch.load(model_dir[-1] + "/params.pth")
 
-        self.brain.set_from_checkpoint(checkpoint)
+        self.agent.set_from_checkpoint(checkpoint)
         self.log_dir = model_dir[-1].split(os.sep)[-1]
         self.running_ext_reward = checkpoint["running_ext_reward"]
         self.x_pos = checkpoint["x_pos"]
@@ -211,7 +210,7 @@ class Logger:
         model_dir = glob.glob("Models/DDQL/*")
         model_dir.sort()
         checkpoint = torch.load(model_dir[-1] + "/params.pth")
-        self.brain.load(checkpoint)
+        self.agent.load(checkpoint)
         self.log_dir = model_dir[-1].split(os.sep)[-1]
         self.running_ext_reward = checkpoint["running_ext_reward"]
         self.x_pos = checkpoint["x_pos"]

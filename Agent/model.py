@@ -3,7 +3,6 @@ import numpy as np
 from torch import nn
 from torch.nn import functional as F
 from torch.distributions.categorical import Categorical
-# from torchsummary import summary
 
 
 def conv_shape(input, kernel_size, stride, padding=0):
