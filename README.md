@@ -23,12 +23,6 @@ RND on our environment | DDQL on our environment
 ![](Results/RND_ourenv_position.png)	               | ![](Results/DDQL_ourenv_position.png)	
 ![](Results/RND_ourenv_action_proba.png)	               | ![](Results/DDQL_ourenv_action_proba.png)	
 
-## Important findings to mention
-
-- **As it has been mentioned in the paper**, one of the obstacles that impact seriously the performance of the agent is the **Dancing with Skulls**. During the test time and also by observing the Running Intrinsic Reward during the training time, it got clear that most of the time, the agent is extremely willing to play with skulls, spiders, laser beams and etc. since those behaviors produce considerable intrinsic rewards.
-- `Kernel_size` of [this part](https://github.com/openai/random-network-distillation/blob/f75c0f1efa473d5109d487062fd8ed49ddce6634/policies/cnn_policy_param_matched.py#L104) of the original implementation is wrong; it should be 3 (same as the DQN nature paper) but it is 4.
-- The usage of `RewardForwardFilter` in the original implementation is definitely wrong, as it's been addressed [here](https://github.com/openai/large-scale-curiosity/issues/6#issuecomment-433981760) and solved [here](https://github.com/openai/random-network-distillation/issues/16#issuecomment-488387659).
-
 ## Table of hyper-parameters
 
 > By using the max and skip frames of 4, max frames per episode should be 4500 so 4500 * 4 = 18000 as it has been mentioned in the paper.
@@ -55,40 +49,46 @@ predictor proportion		     | 0.25
 
 ## Structure
 ```shell
-PPO-RND
-├── Brain
-│   ├── brain.py
-│   └── model.py
+RL_Project
+├── Agent
+│   ├── DDQL_agent.py
+│   ├── RND_agent.py
+│   ├── model.py
+│   └── neural.py
 ├── Common
 │   ├── config.py
+│   ├── env.py
 │   ├── logger.py
 │   ├── play.py
 │   ├── runner.py
 │   └── utils.py
 ├── demo
-│   ├── CNN_Policy.gif
-│   └── RNN_Policy.gif
-├── main.py
+│   ├── agent_ddql_our_env.mp4
+│   ├── finisher_ddql_our_env.mp4
+│   ├── finisher_rnd_nes_env.mp4
+│   └── finisher_rnd_our_env.mp4
+├── Logs
+├── main_ddql.py
+├── main_fromscratch_env.py
+├── main_original_env.py
 ├── Models
-│   └── 2020-10-20-15-39-45
-│       └── params.pth
-├── Plots
-│   ├── CNN
-│   │   ├── ep_reward.png
-│   │   ├── RIR.png
-│   │   └── visited_rooms.png
-│   └── RNN
-│       ├── ep_reward.png
-│       ├── RIR.png
-│       └── visited_rooms.png
+│   ├── DDQL
+│   |   └── 2023-04-13-14-19-52
+│   └── RND
+│       └── 2023-04-06-00-30-40_nes_env
+│       └── 2023-04-06-00-30-40_nes_env
+├── playground.py
+├── Results
 ├── README.md
 └── requirements.txt
 
 ```
-1. _Brain_ dir includes the neural networks structures and the agent decision-making core.
-2. _Common_ includes minor codes that are common for most RL codes and do auxiliary tasks like: logging, wrapping Atari environments, and... .
-3. _main.py_ is the core module of the code that manages all other parts and make the agent interact with the environment.
-4. _Models_ includes a pre-trained weight that you can use to play or keep training by it, also every weight is saved in this directory.
+1. _Agent_ dir includes the neural networks structures and the agents decision-making core.
+2. _Common_ includes minor codes that are common for most RL codes and do auxiliary tasks like: logging, environments, and... .
+3. _main_ddql.py_ is the core module of the code that manages all other parts and make the DDQL agent interact with the custom environment.
+4. _main_fromscratch_env.py_ is the core module of the code that manages all other parts and make the RND agent interact with the custom environment.
+5. _main_original_env.py_ is the core module of the code that manages all other parts and make the RND agent interact with the NES environment.
+6. _Models_ includes the pre-trained weights that you can use to play or keep training by it, also every weight is saved in this directory.
 ## Dependencies
 - gym == 0.17.3
 - matplotlib == 3.3.2
