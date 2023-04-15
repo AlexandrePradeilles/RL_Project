@@ -1,30 +1,28 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)  
-# Random Network Distillation
-> Visit [RNN_Policy branch](https://github.com/alirezakazemipour/PPO-RND/tree/RNN_Policy) for RNN Policy implementation instead of CNN Policy.
+# Introduction / RL Project
 
-Implementation of the **Exploration by Random Network Distillation** on Montezuma's Revenge Atari game. The algorithm simply consists of generating intrinsic rewards based on the novelty that the agent faces and using these rewards to reduce the sparsity of the game. The main algorithm to train the agent is **Proximal Policy Optimization** which is able to combine extrinsic and intrinsic rewards easily and has fairly less variance during training.
+Implementation of the **Exploration by Random Network Distillation** and **Double Deep Q-Learning** on Super Mario Bros NES game and a custom version of Super Mario Bros. This is a RL project for our course.
 
-## [Update]
-Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](https://github.com/alirezakazemipour/PPO-RND/tree/mario) for the code.
+## Random Network Distillation
+The algorithm simply consists of generating intrinsic rewards based on the novelty that the agent faces and using these rewards to reduce the sparsity of the game. The main algorithm to train the agent is **Proximal Policy Optimization** which is able to combine extrinsic and intrinsic rewards easily and has fairly less variance during training.
+
+## Double Deep Q-learning
+Q-learning tends to overestimate bias in experiments across different game environments. A solution involves using two separate Q-value estimators, each of which is used to update the other: we have a model Q and a target model Q’. Using these estimators, we can unbiased Q-value estimates of the actions selected. We can
+thus avoid maximization bias by disentangling our updates from biased estimates.
 
 ## Demo
-RND on original environment | RND on our environment
-:-: | :-:
-<video src='https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video>
+RND on original environment | RND on our environment | DDQL on our environment
+ :-: | :-: | :-:
+<video src='https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232231296-6fdacf82-1684-4051-90f3-b0be1af91c10.mp4' width=180/></video>
 
 
 ## Results
-RNN Policy| CNN Policy
+RND on our environment | DDQL on our environment
 :-----------------------:|:-----------------------:|
-![](Plots/RNN/RIR.png)	               | ![](Plots/CNN/RIR.png)	
-![](Plots/RNN/ep_reward.png)      | ![](Plots/CNN/ep_reward.png)
-![](Plots/RNN/visited_rooms.png)| ![](Plots/CNN/visited_rooms.png)
-
-## Important findings to mention
-
-- **As it has been mentioned in the paper**, one of the obstacles that impact seriously the performance of the agent is the **Dancing with Skulls**. During the test time and also by observing the Running Intrinsic Reward during the training time, it got clear that most of the time, the agent is extremely willing to play with skulls, spiders, laser beams and etc. since those behaviors produce considerable intrinsic rewards.
-- `Kernel_size` of [this part](https://github.com/openai/random-network-distillation/blob/f75c0f1efa473d5109d487062fd8ed49ddce6634/policies/cnn_policy_param_matched.py#L104) of the original implementation is wrong; it should be 3 (same as the DQN nature paper) but it is 4.
-- The usage of `RewardForwardFilter` in the original implementation is definitely wrong, as it's been addressed [here](https://github.com/openai/large-scale-curiosity/issues/6#issuecomment-433981760) and solved [here](https://github.com/openai/random-network-distillation/issues/16#issuecomment-488387659).
+![](Results/RND_ourenv_avgscore.png)	               | ![](Results/DDQL_ourenv_avgscore.png)	
+![](Results/RND_ourenv_max_score.png)	               | ![](Results/DDQL_ourenv_max_score.png)	
+![](Results/RND_ourenv_position.png)	               | ![](Results/DDQL_ourenv_position.png)	
+![](Results/RND_ourenv_action_proba.png)	               | ![](Results/DDQL_ourenv_action_proba.png)	
 
 ## Table of hyper-parameters
 
@@ -52,42 +50,50 @@ predictor proportion		     | 0.25
 
 ## Structure
 ```shell
-PPO-RND
-├── Brain
-│   ├── brain.py
-│   └── model.py
+RL_Project
+├── Agent
+│   ├── DDQL_agent.py
+│   ├── RND_agent.py
+│   ├── model.py
+│   └── neural.py
 ├── Common
 │   ├── config.py
+│   ├── env.py
 │   ├── logger.py
 │   ├── play.py
 │   ├── runner.py
 │   └── utils.py
 ├── demo
-│   ├── CNN_Policy.gif
-│   └── RNN_Policy.gif
-├── main.py
+│   ├── agent_ddql_our_env.mp4
+│   ├── finisher_ddql_our_env.mp4
+│   ├── finisher_rnd_nes_env.mp4
+│   └── finisher_rnd_our_env.mp4
+├── Logs
+├── main_ddql.py
+├── main_fromscratch_env.py
+├── main_original_env.py
 ├── Models
-│   └── 2020-10-20-15-39-45
-│       └── params.pth
-├── Plots
-│   ├── CNN
-│   │   ├── ep_reward.png
-│   │   ├── RIR.png
-│   │   └── visited_rooms.png
-│   └── RNN
-│       ├── ep_reward.png
-│       ├── RIR.png
-│       └── visited_rooms.png
+│   ├── DDQL
+│   |   └── 2023-04-13-14-19-52
+│   └── RND
+│       └── 2023-04-06-00-30-40_nes_env
+│       └── 2023-04-06-00-30-40_nes_env
+├── playground.py
+├── Results
 ├── README.md
 └── requirements.txt
 
 ```
-1. _Brain_ dir includes the neural networks structures and the agent decision-making core.
-2. _Common_ includes minor codes that are common for most RL codes and do auxiliary tasks like: logging, wrapping Atari environments, and... .
-3. _main.py_ is the core module of the code that manages all other parts and make the agent interact with the environment.
-4. _Models_ includes a pre-trained weight that you can use to play or keep training by it, also every weight is saved in this directory.
+1. _Agent_ dir includes the neural networks structures and the agents decision-making core.
+2. _Common_ includes minor codes that are common for most RL codes and do auxiliary tasks like: logging, environments, and... .
+3. _main_ddql.py_ is the core module of the code that manages all other parts and make the DDQL agent interact with the custom environment.
+4. _main_fromscratch_env.py_ is the core module of the code that manages all other parts and make the RND agent interact with the custom environment.
+5. _main_original_env.py_ is the core module of the code that manages all other parts and make the RND agent interact with the NES environment.
+6. _Models_ includes the pre-trained weights that you can use to play or keep training by it, also every weight is saved in this directory.
 ## Dependencies
 - gym == 0.17.3
+- gym-super-mario-bros == 7.3.0
+- keyboard == 0.13.5
 - matplotlib == 3.3.2
 - numpy == 1.19.2
 - opencv_contrib_python == 4.4.0.44
@@ -101,7 +107,7 @@ pip3 install -r requirements.txt
 ## Usage
 ### How to run
 ```bash
-usage: main.py [-h] [--n_workers N_WORKERS] [--interval INTERVAL] [--do_test]
+usage: main.py (replace by one the 3 main python file you want to run) [-h] [--n_workers N_WORKERS] [--interval INTERVAL] [--do_test]
                [--render] [--train_from_scratch]
 
 Variable parameters based on the configuration of the machine or user's choice
@@ -112,7 +118,7 @@ optional arguments:
                         Number of parallel environments.
   --interval INTERVAL   The interval specifies how often different parameters
                         should be saved and printed, counted by iterations.
-  --do_test             The flag determines whether to train the agent or play
+  --do_train             The flag determines whether to train the agent or play
                         with it.
   --render              The flag determines whether to render each agent or
                         not.
@@ -130,14 +136,12 @@ python3 main.py --n_workers=128 --interval=100 --train_from_scratch
 ```
 - **If you want  the agent to play, execute the following:**
 ```shell
-python3 main.py --do_test
+python3 main.py --do_train
 ```
 ### Hardware requirements
-- **The whole training procedure with 32 workers can be done on Google Colab and it takes 2 days of training, thus a machine with a similar configuration would be sufficient, but if you need a more powerful free online GPU provider and to increase the number of environments to 128 and above, take a look at [paperspace.com](paperspace.com)**.
+- **The training has been performed on a RTX3050 Laptop**.
+
 ## References
 1. [_Exploration by Random Network Distillation_, Burda et al., 2018](https://arxiv.org/abs/1810.12894)
 2. [_Proximal Policy Optimization Algorithms_, Schulman et al., 2017](https://arxiv.org/abs/1707.06347)
-
-## Acknowledgement 
-1. [@jcwleo](https://github.com/jcwleo) for [random-network-distillation-pytorch](https://github.com/jcwleo/random-network-distillation-pytorch).
-2. [@OpenAI ](https://github.com/openai) for [random-network-distillation](https://github.com/openai/random-network-distillation).
+3. [_Deep Reinforcement Learning with Double Q-learning_, Hasselt et al.., 2015](https://arxiv.org/abs/1509.06461)
