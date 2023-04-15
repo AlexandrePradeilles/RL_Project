@@ -1,23 +1,27 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)  
-# Random Network Distillation
-> Visit [RNN_Policy branch](https://github.com/alirezakazemipour/PPO-RND/tree/RNN_Policy) for RNN Policy implementation instead of CNN Policy.
+# Introduction / RL Project
 
-Implementation of the **Exploration by Random Network Distillation** on Montezuma's Revenge Atari game. The algorithm simply consists of generating intrinsic rewards based on the novelty that the agent faces and using these rewards to reduce the sparsity of the game. The main algorithm to train the agent is **Proximal Policy Optimization** which is able to combine extrinsic and intrinsic rewards easily and has fairly less variance during training.
+Implementation of the **Exploration by Random Network Distillation** and **Double Deep Q-Learning** on Super Mario Bros NES game and a custom version of Super Mario Bros. This is a RL project for our course.
 
-## [Update]
-Implementation for SuperMarioBros-1-1-v0 has been added! Visit [mario branch](https://github.com/alirezakazemipour/PPO-RND/tree/mario) for the code.
+## Random Network Distillation
+The algorithm simply consists of generating intrinsic rewards based on the novelty that the agent faces and using these rewards to reduce the sparsity of the game. The main algorithm to train the agent is **Proximal Policy Optimization** which is able to combine extrinsic and intrinsic rewards easily and has fairly less variance during training.
+
+## Double Deep Q-learning
+
 
 ## Demo
 RND on original environment | RND on our environment | DDQL on our environment
  :-: | :-: | :-:
-<video src='https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video> | <video src='https://github.com/AlexandrePradeilles/RL_Project/blob/main/demo/agent_ddql_our_env.mp4' width=180/></video>
+<video src='https://user-images.githubusercontent.com/104620137/232108067-b4d494bb-3233-4d05-a9d2-9f8da23c548c.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232101860-e1c08577-25f5-4825-9242-c30f5f28b7f7.mp4' width=180/></video> | <video src='https://user-images.githubusercontent.com/104620137/232231296-6fdacf82-1684-4051-90f3-b0be1af91c10.mp4' width=180/></video>
+
 
 ## Results
-RNN Policy| CNN Policy
+RND on our environment | DDQL on our environment
 :-----------------------:|:-----------------------:|
-![](Plots/RNN/RIR.png)	               | ![](Plots/CNN/RIR.png)	
-![](Plots/RNN/ep_reward.png)      | ![](Plots/CNN/ep_reward.png)
-![](Plots/RNN/visited_rooms.png)| ![](Plots/CNN/visited_rooms.png)
+![](Results/RND_ourenv_avgscore.png)	               | ![](Results/DDQL_ourenv_avgscore.png)	
+![](Results/RND_ourenv_max_score.png)	               | ![](Results/DDQL_ourenv_max_score.png)	
+![](Results/RND_ourenv_position.png)	               | ![](Results/DDQL_ourenv_position.png)	
+![](Results/RND_ourenv_action_proba.png)	               | ![](Results/DDQL_ourenv_action_proba.png)	
 
 ## Important findings to mention
 
