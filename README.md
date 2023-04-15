@@ -7,7 +7,8 @@ Implementation of the **Exploration by Random Network Distillation** and **Doubl
 The algorithm simply consists of generating intrinsic rewards based on the novelty that the agent faces and using these rewards to reduce the sparsity of the game. The main algorithm to train the agent is **Proximal Policy Optimization** which is able to combine extrinsic and intrinsic rewards easily and has fairly less variance during training.
 
 ## Double Deep Q-learning
-
+Q-learning tends to overestimate bias in experiments across different game environments. A solution involves using two separate Q-value estimators, each of which is used to update the other: we have a model Q and a target model Q’. Using these estimators, we can unbiased Q-value estimates of the actions selected. We can
+thus avoid maximization bias by disentangling our updates from biased estimates.
 
 ## Demo
 RND on original environment | RND on our environment | DDQL on our environment
